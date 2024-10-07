@@ -27,10 +27,24 @@ function fitImageToContainer() {
 
     // Set initial scale and center the image
     scale = initialScale;
+    centerImage();
+}
+
+function centerImage() {
     translateX = (imageContainer.clientWidth - image.naturalWidth * scale) / 2;
     translateY = (imageContainer.clientHeight - image.naturalHeight * scale) / 2;
-
     setTransform();
+}
+
+function zoom(delta) {
+    const oldScale = scale;
+    const maxScale = imageViewer.clientWidth / image.naturalWidth // Set maximum zoom to image width
+    scale = Math.min(Math.max(initialScale, scale * delta), maxScale);
+    
+    if (scale !== oldScale) {
+        // Keep the image centered
+        centerImage();
+    }
 }
 
 function limitBounds() {
@@ -44,28 +58,6 @@ function limitBounds() {
     translateY = Math.max(minTranslateY, Math.min(0, translateY));
 }
 
-function zoom(delta) {
-    const oldScale = scale;
-    const maxScale = imageViewer.clientWidth / image.naturalWidth; // calculate the maximum scale based on the image viewer width
-    scale *= delta;
-    scale = Math.min(Math.max(initialScale, scale), maxScale); // Limit zoom between initial scale and 4x
-
-    if (scale !== oldScale) {
-        const scaleChange = scale / oldScale;
-
-        // Calculate the center of the image
-        const imageCenterX = imageContainer.clientWidth / 2;
-        const imageCenterY = imageContainer.clientHeight / 2;
-
-        // Adjust the translation to keep the image centered while zooming
-        translateX = imageCenterX - (imageCenterX - translateX) * scaleChange;
-        translateY = imageCenterY - (imageCenterY - translateY) * scaleChange;
-
-        limitBounds();
-        setTransform();
-    }
-}
-
 imageContainer.addEventListener('wheel', (e) => {
     e.preventDefault();
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
@@ -73,10 +65,12 @@ imageContainer.addEventListener('wheel', (e) => {
 });
 
 imageContainer.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    startX = e.clientX - translateX;
-    startY = e.clientY - translateY;
-    imageContainer.style.cursor = 'grabbing';
+    if (scale > initialScale) {
+        isDragging = true;
+        startX = e.clientX - translateX;
+        startY = e.clientY - translateY;
+        imageContainer.style.cursor = 'grabbing';
+    }
 });
 
 imageContainer.addEventListener('mousemove', (e) => {
@@ -97,13 +91,8 @@ imageContainer.addEventListener('mouseleave', () => {
     imageContainer.style.cursor = 'grab';
 });
 
-zoomInBtn.addEventListener('click', () => {
-    zoom(1.1);
-});
-
-zoomOutBtn.addEventListener('click', () => {
-    zoom(0.9);
-});
+zoomInBtn.addEventListener('click', () => zoom(1.1));
+zoomOutBtn.addEventListener('click', () => zoom(0.9));
 
 image.onload = fitImageToContainer;
 window.addEventListener('resize', fitImageToContainer);
