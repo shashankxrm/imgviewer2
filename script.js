@@ -2,6 +2,7 @@ const imageContainer = document.querySelector('.image-container');
 const image = document.getElementById('viewable-image');
 const zoomInBtn = document.getElementById('zoom-in');
 const zoomOutBtn = document.getElementById('zoom-out');
+const imageViewer = document.getElementById('image-viewer');
 
 let scale = 1;
 let initialScale = 1;
@@ -45,8 +46,9 @@ function limitBounds() {
 
 function zoom(delta) {
     const oldScale = scale;
+    const maxScale = imageViewer.clientWidth / image.naturalWidth; // calculate the maximum scale based on the image viewer width
     scale *= delta;
-    scale = Math.min(Math.max(initialScale, scale), 4); // Limit zoom between initial scale and 4x
+    scale = Math.min(Math.max(initialScale, scale), maxScale); // Limit zoom between initial scale and 4x
 
     if (scale !== oldScale) {
         const scaleChange = scale / oldScale;
