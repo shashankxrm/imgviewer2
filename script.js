@@ -24,7 +24,7 @@ function fitImageToContainer() {
         initialScale = imageContainer.clientHeight / image.naturalHeight;
     }
 
-    // Reset scale and translation to initial values
+    // Set initial scale and center the image
     scale = initialScale;
     translateX = (imageContainer.clientWidth - image.naturalWidth * scale) / 2;
     translateY = (imageContainer.clientHeight - image.naturalHeight * scale) / 2;
@@ -43,7 +43,7 @@ function limitBounds() {
     translateY = Math.max(minTranslateY, Math.min(0, translateY));
 }
 
-function zoom(delta, centerX, centerY) {
+function zoom(delta) {
     const oldScale = scale;
     scale *= delta;
     scale = Math.min(Math.max(initialScale, scale), 4); // Limit zoom between initial scale and 4x
@@ -51,9 +51,13 @@ function zoom(delta, centerX, centerY) {
     if (scale !== oldScale) {
         const scaleChange = scale / oldScale;
 
-        // Adjust the translation to zoom towards the cursor position
-        translateX = centerX - (centerX - translateX) * scaleChange;
-        translateY = centerY - (centerY - translateY) * scaleChange;
+        // Calculate the center of the image
+        const imageCenterX = imageContainer.clientWidth / 2;
+        const imageCenterY = imageContainer.clientHeight / 2;
+
+        // Adjust the translation to keep the image centered while zooming
+        translateX = imageCenterX - (imageCenterX - translateX) * scaleChange;
+        translateY = imageCenterY - (imageCenterY - translateY) * scaleChange;
 
         limitBounds();
         setTransform();
@@ -62,11 +66,8 @@ function zoom(delta, centerX, centerY) {
 
 imageContainer.addEventListener('wheel', (e) => {
     e.preventDefault();
-    const rect = imageContainer.getBoundingClientRect();
-    const centerX = e.clientX - rect.left;
-    const centerY = e.clientY - rect.top;
     const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    zoom(delta, centerX, centerY);
+    zoom(delta);
 });
 
 imageContainer.addEventListener('mousedown', (e) => {
@@ -95,19 +96,13 @@ imageContainer.addEventListener('mouseleave', () => {
 });
 
 zoomInBtn.addEventListener('click', () => {
-    const centerX = imageContainer.clientWidth / 2;
-    const centerY = imageContainer.clientHeight / 2;
-    zoom(1.1, centerX, centerY);
+    zoom(1.1);
 });
 
 zoomOutBtn.addEventListener('click', () => {
-    const centerX = imageContainer.clientWidth / 2;
-    const centerY = imageContainer.clientHeight / 2;
-    zoom(0.9, centerX, centerY);
+    zoom(0.9);
 });
 
 image.onload = fitImageToContainer;
 window.addEventListener('resize', fitImageToContainer);
-
-// Ensure the image is rendered in its initial state on page load
 window.addEventListener('load', fitImageToContainer);
